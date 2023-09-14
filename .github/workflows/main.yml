@@ -1,0 +1,197 @@
+on: [push]
+jobs:
+  setup:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - run: python3.10 -m venv venv
+      - run: venv/bin/python -m pip install --upgrade pip setuptools wheel
+      - run: venv/bin/python -m pip install --no-cache-dir -r requirements.d/test.txt
+
+  setup-and-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - run: python3.10 -m venv venv
+      - run: venv/bin/python -m pip install --upgrade pip setuptools wheel
+      - run: venv/bin/python -m pip install --no-cache-dir -r requirements.d/test.txt
+      - run: wget https://github.com/Bengt/BirdNET-Training-Data/archive/refs/heads/main.zip
+      - run: unzip main.zip
+      - run: rm -rf main.zip
+      - run: venv/bin/python -m pytest tests
+
+  install:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - run: python3.10 -m venv venv
+      - run: venv/bin/python -m pip install --upgrade pip setuptools wheel
+      - run: venv/bin/python -m pip install --no-cache-dir -r requirements.d/test.txt
+      - run: venv/bin/python -m pip install -e .
+
+  build-analyze-linux-gtk:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - run: python3.10 --version
+      - run: sudo apt-get update
+      - run: sudo apt-get install --yes ffmpeg libgirepository1.0-dev
+      - run: python3.10 -m venv venv
+      - run: venv/bin/python -m pip install --upgrade pip setuptools wheel
+      - run: venv/bin/python -m pip install --upgrade -r requirements.d/build_gtk.in
+      - run: venv/bin/python pyinstaller_analyze.py
+      - uses: actions/upload-artifact@v3
+        with:
+          name: BirdNET-Analyze-Linux-GTK
+          path: build
+          retention-days: 90
+
+  build-analyze-linux-qt:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - run: python3.10 --version
+      - run: sudo apt-get update
+      - run: sudo apt-get install --yes ffmpeg
+      - run: python3.10 -m venv venv
+      - run: venv/bin/python -m pip install --upgrade pip setuptools wheel
+      - run: venv/bin/python -m pip install --upgrade -r requirements.d/build_qt.in
+      - run: venv/bin/python pyinstaller_analyze.py
+      - uses: actions/upload-artifact@v3
+        with:
+          name: BirdNET-Analyze-Linux-Qt
+          path: build
+          retention-days: 90
+
+  build-analyze-macos-gtk:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v3
+      - run: python3.11 --version
+      - run: brew install ffmpeg cairo pkg-config gobject-introspection
+      - run: python3.11 -m venv venv
+      - run: venv/bin/python -m pip install --upgrade pip setuptools wheel
+      - run: venv/bin/python -m pip install --upgrade -r requirements.d/build_gtk.in
+      - run: venv/bin/python pyinstaller_analyze.py
+      - uses: actions/upload-artifact@v3
+        with:
+          name: BirdNET-Analyze-macOS-GTK
+          path: build
+          retention-days: 90
+
+  build-analyze-macos-qt:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v3
+      - run: python3.11 --version
+      - run: brew install ffmpeg
+      - run: python3.11 -m venv venv
+      - run: venv/bin/python -m pip install --upgrade pip setuptools wheel
+      - run: venv/bin/python -m pip install --upgrade -r requirements.d/build_qt.in
+      - run: venv/bin/python pyinstaller_analyze.py
+      - uses: actions/upload-artifact@v3
+        with:
+          name: BirdNET-Analyze-macOS-Qt
+          path: build
+          retention-days: 90
+
+  build-analyze-windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v3
+      - run: python3 --version
+      - run: choco install ffmpeg visualstudio2022-workload-vctools
+      - run: python3 -m venv venv
+      - run: venv\Scripts\python.exe -m pip install --upgrade pip setuptools wheel
+      - run: venv\Scripts\python.exe -m pip install --upgrade -r requirements.d/build_qt.in
+      - run: venv\Scripts\python.exe pyinstaller_analyze.py
+      - uses: actions/upload-artifact@v3
+        with:
+          name: BirdNET-Analyze-Windows-Qt
+          path: build
+          retention-days: 90
+
+  build-gui-linux-gtk:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - run: python3.10 --version
+      - run: sudo apt-get update
+      - run: sudo apt-get install --yes ffmpeg libgirepository1.0-dev
+      - run: python3.10 -m venv venv
+      - run: venv/bin/python -m pip install --upgrade pip setuptools wheel
+      - run: venv/bin/python -m pip install --upgrade -r requirements.d/build_gtk.in
+      - run: venv/bin/python pyinstaller_gui.py
+      - uses: actions/upload-artifact@v3
+        with:
+          name: BirdNET-GUI-Linux-GTK
+          path: build
+          retention-days: 90
+
+  build-gui-linux-qt:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - run: python3.10 --version
+      - run: sudo apt-get update
+      - run: sudo apt-get install --yes ffmpeg
+      - run: python3.10 -m venv venv
+      - run: venv/bin/python -m pip install --upgrade pip setuptools wheel
+      - run: venv/bin/python -m pip install --upgrade -r requirements.d/build_qt.in
+      - run: venv/bin/python pyinstaller_gui.py
+      - uses: actions/upload-artifact@v3
+        with:
+          name: BirdNET-GUI-Linux-Qt
+          path: build
+          retention-days: 90
+
+  build-gui-macos-gtk:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v3
+      - run: python3.11 --version
+      - run: brew install ffmpeg cairo pkg-config gobject-introspection
+      - run: python3.11 -m venv venv
+      - run: venv/bin/python -m pip install --upgrade pip setuptools wheel
+      - run: venv/bin/python -m pip install --upgrade -r requirements.d/build_gtk.in
+      - run: venv/bin/python pyinstaller_gui.py
+      - uses: actions/upload-artifact@v3
+        with:
+          name: BirdNET-GUI-macOS-GTK
+          path: build
+          retention-days: 90
+
+  build-gui-macos-qt:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v3
+      - run: python3.11 --version
+      - run: brew install ffmpeg
+      - run: python3.11 -m venv venv
+      - run: venv/bin/python -m pip install --upgrade pip setuptools wheel
+      - run: venv/bin/python -m pip install --upgrade -r requirements.d/build_qt.in
+      - run: venv/bin/python pyinstaller_gui.py
+      - uses: actions/upload-artifact@v3
+        with:
+          name: BirdNET-GUI-macOS-Qt
+          path: build
+          retention-days: 90
+
+  build-gui-windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v3
+      - run: python3 --version
+      - run: choco install ffmpeg
+      - run: python3 -m venv venv
+      - run: venv\Scripts\python.exe -m pip install --upgrade pip setuptools wheel
+      - run: venv\Scripts\python.exe -m pip install --upgrade -r requirements.d/build_qt.in
+      - run: venv\Scripts\python.exe pyinstaller_gui.py
+      - uses: actions/upload-artifact@v3
+        with:
+          name: BirdNET-GUI-Windows-Qt
+          path: build
+          retention-days: 90
