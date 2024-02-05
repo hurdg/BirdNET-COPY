@@ -2,10 +2,6 @@ import concurrent.futures
 import os
 import sys
 
-if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-    # divert stdout & stderr to logs.txt file since we have no console when deployed
-    sys.stderr = sys.stdout = open("logs.txt", "w")
-
 from multiprocessing import freeze_support
 from pathlib import Path
 
@@ -208,7 +204,7 @@ def runAnalysis(
     locale = locale.lower()
     # Load eBird codes, labels
     cfg.CODES = analyze.loadCodes()
-    cfg.LABELS = utils.readLines(ORIGINAL_LABELS_FILE)
+    cfg.LABELS = utils.readLines(utils.local_path(ORIGINAL_LABELS_FILE))
     cfg.LATITUDE, cfg.LONGITUDE, cfg.WEEK = lat, lon, -1 if use_yearlong else week
     cfg.LOCATION_FILTER_THRESHOLD = sf_thresh
 
@@ -249,7 +245,7 @@ def runAnalysis(
 
     # Load translated labels
     lfile = os.path.join(
-        cfg.TRANSLATED_LABELS_PATH, os.path.basename(cfg.LABELS_FILE).replace(".txt", f"_{locale}.txt")
+        utils.local_path(cfg.TRANSLATED_LABELS_PATH), os.path.basename(cfg.LABELS_FILE).replace(".txt", f"_{locale}.txt")
     )
     if not locale in ["en"] and os.path.isfile(lfile):
         cfg.TRANSLATED_LABELS = utils.readLines(lfile)
@@ -670,7 +666,7 @@ def locale():
     Returns:
         The dropdown element.
     """
-    label_files = os.listdir(os.path.join(os.path.dirname(sys.argv[0]), ORIGINAL_TRANSLATED_LABELS_PATH))
+    label_files = os.listdir(utils.local_path(ORIGINAL_TRANSLATED_LABELS_PATH))
     options = ["EN"] + [label_file.rsplit("_", 1)[-1].split(".")[0].upper() for label_file in label_files]
 
     return gr.Dropdown(options, value="EN", label="Locale", info="Locale for the translated species common names.")
